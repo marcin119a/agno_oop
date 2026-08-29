@@ -43,3 +43,5 @@ htmlcov/
 .ruff_cache/
 
 *.lock
+
+*.db*

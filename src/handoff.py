@@ -11,6 +11,7 @@ from agno.db.base import BaseDb
 from agno.db.in_memory import InMemoryDb
 from agno.workflow import Router, Step, Workflow
 from agno.workflow.types import StepInput, StepOutput
+from agno.db.sqlite import SqliteDb
 
 from agents.faq.agent import create_faq_agent
 from agents.faq.knowledge_base import FAQ
@@ -102,8 +103,9 @@ def main() -> None:
             "Missing API key. Set OPENAI_API_KEY in the .env file in the working directory\n"
             "(or set the OPENAI_API_KEY environment variable)."
         )
+    db = SqliteDb(db_file="faq_agent_os.db")
 
-    workflow = create_handoff_workflow(settings, db=InMemoryDb())
+    workflow = create_handoff_workflow(settings, db=db)
     session_id = str(uuid4())
 
     if len(sys.argv) > 1:
