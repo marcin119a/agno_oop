@@ -27,7 +27,7 @@ INSTRUCTIONS = (
 )
 
 
-def create_agent(settings: Settings, db: BaseDb | None = None) -> Agent:
+def create_faq_agent(settings: Settings, db: BaseDb | None = None) -> Agent:
     """Builds the FAQ agent with the configured model and tools.
 
     Defaults to an in-memory, per-process session store; pass `db`

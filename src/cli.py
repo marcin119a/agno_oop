@@ -4,7 +4,7 @@ from __future__ import annotations
 import sys
 from uuid import uuid4
 
-from agents.faq.agent import create_agent
+from agents.faq.agent import create_faq_agent
 from config import Settings
 
 
@@ -16,7 +16,7 @@ def main() -> None:
             "(or set the OPENAI_API_KEY environment variable)."
         )
 
-    agent = create_agent(settings)
+    agent = create_faq_agent(settings)
 
     if len(sys.argv) > 1:
         # One-shot mode: question passed as an argument.
