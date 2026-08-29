@@ -18,4 +18,4 @@ class Settings(BaseSettings):
     )
 
     openai_api_key: str = ""  # OPENAI_API_KEY variable
-    model_name: str = "gpt-4o-mini"  # MODEL_NAME variable
+    model_name: str = "gpt-5.5"  # MODEL_NAME variable
