@@ -5,9 +5,8 @@ from __future__ import annotations
 from agno.agent import Agent
 from agno.db.base import BaseDb
 from agno.db.in_memory import InMemoryDb
-from agno.models.openai import OpenAIChat
 
-from config import Settings
+from config import Settings, create_model
 from agents.faq.tools import FaqTools
 
 INSTRUCTIONS = (
@@ -35,7 +34,7 @@ def create_faq_agent(settings: Settings, db: BaseDb | None = None) -> Agent:
     """
     return Agent(
         name="FAQ Agent",
-        model=OpenAIChat(id=settings.model_name, api_key=settings.openai_api_key),
+        model=create_model(settings),
         instructions=INSTRUCTIONS,
         tools=[FaqTools()],
         db=db or InMemoryDb(),

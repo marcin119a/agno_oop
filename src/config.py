@@ -1,8 +1,10 @@
+from typing import Literal
 
-from __future__ import annotations
-
+from agno.models.base import Model
 from pydantic import SecretStr
 from pydantic_settings import BaseSettings, SettingsConfigDict
+from agno.models.ollama import Ollama
+from agno.models.openai import OpenAIChat
 
 
 class Settings(BaseSettings):
@@ -17,13 +19,34 @@ class Settings(BaseSettings):
         extra="ignore",
     )
 
-    openai_api_key: str = ""  # OPENAI_API_KEY variable
-    model_name: str = "gpt-5.5"  # MODEL_NAME variable
+    model_provider: Literal["openai", "ollama"] = "openai"
+    model_name: str = "gpt-5.5"
+    openai_api_key: str = ""
 
-    smtp_host: str = ""  # SMTP_HOST variable
-    smtp_port: int = 587  # SMTP_PORT variable
-    smtp_username: str = ""  # SMTP_USERNAME variable
-    smtp_password: SecretStr = SecretStr("")  # SMTP_PASSWORD variable
-    smtp_from: str = ""  # SMTP_FROM variable
-    smtp_to: str = ""  # SMTP_TO variable — human consultant's address
-    smtp_use_tls: bool = True  # SMTP_USE_TLS variable
+    smtp_host: str = ""
+    smtp_port: int = 587
+    smtp_username: str = ""
+    smtp_password: SecretStr = SecretStr("")
+    smtp_from: str = ""
+    smtp_to: str = ""
+    smtp_use_tls: bool = True
+
+    ollama_host: str = "http://localhost:11434"
+
+
+def create_model(settings: Settings) -> Model:
+    """Build the chat model selected by `settings.model_provider`."""
+
+    if settings.model_provider == "ollama":
+
+        return Ollama(
+            id=settings.model_name,
+            host=settings.ollama_host,
+            options={"num_ctx": 16384},
+            keep_alive="30m",
+        )
+
+    return OpenAIChat(
+        id=settings.model_name,
+        api_key=settings.openai_api_key,
+    )

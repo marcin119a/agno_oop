@@ -6,10 +6,9 @@ from typing import Literal
 
 from agno.agent import Agent
 from agno.db.base import BaseDb
-from agno.models.openai import OpenAIChat
 from pydantic import BaseModel
 
-from config import Settings
+from config import Settings, create_model
 
 TRIAGE_INSTRUCTIONS = (
     "Jesteś agentem triażu obsługi klienta linii lotniczej Example Air.\n"
@@ -33,7 +32,7 @@ def create_triage_agent(settings: Settings, db: BaseDb | None = None) -> Agent:
     """Builds the triage agent that decides where to hand off the question."""
     return Agent(
         name="Triage Agent",
-        model=OpenAIChat(id=settings.model_name, api_key=settings.openai_api_key),
+        model=create_model(settings),
         instructions=TRIAGE_INSTRUCTIONS,
         output_schema=Triage,
         db=db,

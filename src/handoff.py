@@ -31,6 +31,11 @@ def _triage_of(step_input: StepInput) -> Triage:
     output = step_input.get_step_output(TRIAGE_STEP)
     if output is None:
         raise RuntimeError(f"Step '{TRIAGE_STEP}' produced no output")
+    if not isinstance(output.content, Triage):
+        # Agent errors are surfaced as a plain string in the step content.
+        raise RuntimeError(
+            f"Step '{TRIAGE_STEP}' did not return a Triage decision: {output.content!r}"
+        )
     return output.content
 
 
@@ -103,7 +108,7 @@ async def aask(question: str, workflow: Workflow, session_id: str):
 
 def main() -> None:
     settings = Settings()
-    if not settings.openai_api_key:
+    if settings.model_provider == "openai" and not settings.openai_api_key:
         sys.exit(
             "Missing API key. Set OPENAI_API_KEY in the .env file in the working directory\n"
             "(or set the OPENAI_API_KEY environment variable)."
@@ -113,8 +118,12 @@ def main() -> None:
     workflow = create_handoff_workflow(settings, db=db)
     session_id = str(uuid4())
 
+    asyncio.run(_amain(workflow, session_id))
+
+
+async def _amain(workflow: Workflow, session_id: str) -> None:
     if len(sys.argv) > 1:
-        result = asyncio.run(aask(" ".join(sys.argv[1:]), workflow, session_id))
+        result = await aask(" ".join(sys.argv[1:]), workflow, session_id)
         print(result.content)
         return
 
@@ -129,7 +138,7 @@ def main() -> None:
             continue
         if question.lower() in {"exit", "quit"}:
             break
-        result = asyncio.run(aask(question, workflow, session_id))
+        result = await aask(question, workflow, session_id)
         print(f"\nAgent: {result.content}")
 
 

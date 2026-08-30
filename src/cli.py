@@ -10,7 +10,7 @@ from config import Settings
 
 def main() -> None:
     settings = Settings()
-    if not settings.openai_api_key:
+    if settings.model_provider == "openai" and not settings.openai_api_key:
         sys.exit(
             "Missing API key. Set OPENAI_API_KEY in the .env file in the working directory\n"
             "(or set the OPENAI_API_KEY environment variable)."
