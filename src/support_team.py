@@ -9,14 +9,17 @@ from agno.team import Team, TeamMode
 
 from agents.faq.agent import create_faq_agent
 from agents.human.agent import create_human_agent
+from agents.baggage.agent import create_baggage_agent
 from config import Settings
 from notifications import HandoffNotifier
+from agno.db.sqlite import SqliteDb
 
 TEAM_INSTRUCTIONS = (
     "Jesteś recepcją obsługi klienta linii lotniczej Example Air.\n"
     "- Sprawy dotyczące konkretnej rezerwacji, lotu, biletu lub reklamacji pasażera "
     "kieruj do Human Agent.\n"
-    "- Wszystkie pozostałe pytania (zasady, opłaty, procedury) kieruj do FAQ Agent."
+    "- Wszystkie pozostałe pytania (zasady, opłaty, procedury) kieruj do FAQ Agent.\n"
+    "- Pytania dotyczące nadbagażu kieruj do Baggage Agent."
 )
 
 
@@ -25,6 +28,7 @@ def create_support_team(
     db: BaseDb | None = None,
     faq_agent: Agent | None = None,
     human_agent: Agent | None = None,
+    baggage_agent: Agent | None = None,
     notifier: HandoffNotifier | None = None,
     leader_model: Model | None = None,
 ) -> Team:
@@ -34,13 +38,14 @@ def create_support_team(
     if human_agent is None:
         notifier = notifier or HandoffNotifier.from_settings(settings)
         human_agent = create_human_agent(settings, notifier=notifier, db=db)
+    baggage_agent = baggage_agent or create_baggage_agent(settings, db=db)
     leader_model = leader_model or create_model(settings)
 
     return Team(
         name="Support Team",
         mode=TeamMode.route,
         model=leader_model,
-        members=[faq_agent, human_agent],
+        members=[faq_agent, human_agent, baggage_agent],
         instructions=TEAM_INSTRUCTIONS,
         determine_input_for_members=False,
         db=db,
@@ -48,27 +53,29 @@ def create_support_team(
 
 
 
-def ask(question: str, settings: Settings | None = None) -> str:
+def ask(question: str, settings: Settings | None = None, db: BaseDb | None = None) -> str:
     """Runs the support team and returns the chosen member's answer."""
     settings = settings or Settings()
-    team = create_support_team(settings)
+    team = create_support_team(settings, db=db)
     return team.run(question).content
 
 
 async def aask(question: str, settings: Settings | None = None) -> str:
     """Async variant of `ask`."""
     settings = settings or Settings()
-    team = create_support_team(settings)
+    team = create_support_team(settings, db=db)
     result = await team.arun(question)
     return result.content
 
 
 def main() -> None:
     settings = Settings()
+    db = SqliteDb(db_file="faq_agent_os.db")
+
     if not settings.openai_api_key:
         sys.exit("Missing API key. Set OPENAI_API_KEY in the .env file.")
     question = " ".join(sys.argv[1:]) or "Ile kosztuje nadbagaż?"
-    print(ask(question, settings=settings))
+    print(ask(question, settings=settings, db=db))
 
 
 if __name__ == "__main__":
