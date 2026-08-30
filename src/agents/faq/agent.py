@@ -35,6 +35,7 @@ def create_faq_agent(settings: Settings, db: BaseDb | None = None) -> Agent:
     return Agent(
         name="FAQ Agent",
         model=create_model(settings),
+        role="Odpowiada na ogólne pytania o zasady, opłaty i procedury z bazy FAQ",
         instructions=INSTRUCTIONS,
         tools=[FaqTools()],
         db=db or InMemoryDb(),
