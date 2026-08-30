@@ -24,6 +24,7 @@ from agents.faq.agent import create_faq_agent
 from config import Settings
 from handoff import create_handoff_workflow
 from agents.human.agent import create_human_agent
+from agents.baggage.agent import create_baggage_agent
 from agents.triage.agent import create_triage_agent
 from support_team import create_support_team
 
@@ -41,11 +42,12 @@ handoff_workflow = create_handoff_workflow(
     faq_agent=agent,
 )
 human_agent = create_human_agent(settings, db=db)
-support_team = create_support_team(settings, db=db, faq_agent=agent, human_agent=human_agent)
+baggage_agent = create_baggage_agent(settings, db=db)
+support_team = create_support_team(settings, db=db, faq_agent=agent, human_agent=human_agent, baggage_agent=baggage_agent)
 
 agent_os = AgentOS(
     name="faq-agent",
-    agents=[agent, triage_agent],
+    agents=[agent, triage_agent, human_agent, baggage_agent],
     teams=[support_team],
     workflows=[handoff_workflow],
     db=db,
