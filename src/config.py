@@ -19,3 +19,11 @@ class Settings(BaseSettings):
 
     openai_api_key: str = ""  # OPENAI_API_KEY variable
     model_name: str = "gpt-5.5"  # MODEL_NAME variable
+
+    smtp_host: str = ""  # SMTP_HOST variable
+    smtp_port: int = 587  # SMTP_PORT variable
+    smtp_username: str = ""  # SMTP_USERNAME variable
+    smtp_password: SecretStr = SecretStr("")  # SMTP_PASSWORD variable
+    smtp_from: str = ""  # SMTP_FROM variable
+    smtp_to: str = ""  # SMTP_TO variable — human consultant's address
+    smtp_use_tls: bool = True  # SMTP_USE_TLS variable

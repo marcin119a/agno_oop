@@ -17,6 +17,7 @@ from agents.faq.agent import create_faq_agent
 from agents.faq.knowledge_base import FAQ
 from agents.triage.agent import Triage, create_triage_agent
 from config import Settings
+from notifications.notifier import HandoffNotifier
 
 TRIAGE_STEP = "triage"
 
@@ -38,13 +39,15 @@ def _question(step_input: StepInput) -> StepOutput:
     return StepOutput(content=step_input.get_input_as_string())
 
 
-def _make_human_handoff():
+def _make_human_handoff(notifier: HandoffNotifier):
     """Builds the human-handoff step executor.
     """
 
     def _human_handoff(step_input: StepInput) -> StepOutput:
         """Notifies a human consultant and returns the canned reply."""
         triage = _triage_of(step_input)
+        message = f"User's question requires human intervention: {triage.reason}"
+        notifier.notify(message)
 
         return StepOutput(
             content=(
@@ -62,6 +65,7 @@ def create_handoff_workflow(
     triage_agent: Agent | None = None,
     faq_agent: Agent | None = None,
     num_history_runs: int = 5,
+    notifier: HandoffNotifier | None = None,
 ) -> Workflow:
     """Builds the handoff workflow.
 
@@ -69,11 +73,12 @@ def create_handoff_workflow(
     triage_agent = triage_agent or create_triage_agent(settings, db=db)
     faq_agent = faq_agent or create_faq_agent(settings, db=db)
     faq_agent.add_history_to_context = False
+    notifier = notifier or HandoffNotifier.from_settings(settings)
 
     triage_step = Step(name=TRIAGE_STEP, agent=triage_agent)
     question_step = Step(name="Question Step", executor=_question)
     faq_step = Step(name="FAQ Step", agent=faq_agent)
-    human_step = Step(name="Human Handoff Step", executor=_make_human_handoff())
+    human_step = Step(name="Human Handoff Step", executor=_make_human_handoff(notifier))
 
     def route(step_input: StepInput) -> list[Step]:
         if _triage_of(step_input).target == "human":
